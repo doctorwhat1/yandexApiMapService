@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Yandex Map Marker</title>
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=54a3c199-45f2-476d-9686-ba2ac517cc90" type="text/javascript"></script>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/10.11.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/10.11.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/10.11.0/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/10.11.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/10.11.0/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/10.11.0/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/10.11.0/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/10.11.0/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/10.11.0/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/10.11.0/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+
+    <style>
+      .active {
+          background-color: blue;
+          color: white;
+      }
+  </style>
+
+    <style media="screen">
+      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
+      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
+      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
+      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
+      @media (max-width: 600px) {
+        body, #message { margin-top: 0; background: white; box-shadow: none; }
+        body { border-top: 16px solid #ffa100; }
+      }
+    </style>
+  </head>
+  <body>
+    <button id="markerButton" onclick="toggleMarker()">Add Marker</button>
+    <button id="deleteButton" onclick="toggleDelete()">Delete</button>
+    <input type="text" id="textInput" placeholder="Enter text for marker">
+    <input type="color" id="colorPicker" value="#ff0000" title="Choose your color">
+    <input type="text" id="searchInput" placeholder="Search for a placemark">
+    <button onclick="searchPlacemarks()">Search</button>
+    <div id="map" style="width: 600px; height: 400px;"></div>
+
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+    
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyAFC_ADHEiKZblASNPFCVqhiU9yg8eEcqo",
+        authDomain: "geolocdatabase.firebaseapp.com",
+        projectId: "geolocdatabase",
+        storageBucket: "geolocdatabase.appspot.com",
+        messagingSenderId: "730193799094",
+        appId: "1:730193799094:web:821e97c14a4644b5e24317"
+      };
+    
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+    </script>
+
+    <script>
+        var map; // Global map variable
+        var markerActive = false;
+        var deleteActive = false;
+        var placemarks = []; // To store placemarks
+
+        // Initialize the map
+        ymaps.ready(init);
+
+        function init() {
+            map = new ymaps.Map("map", {
+                center: [56.296505, 43.936058],
+                zoom: 10 // Default zoom level
+            });
+        }
+
+        // Toggle marker activity and button style
+        function toggleMarker() {
+            markerActive = !markerActive;
+            var button = document.getElementById('markerButton');
+            if (markerActive) {
+                button.classList.add('active');
+                // Add click event listener for markers when active
+                map.events.add('click', onMapClick);
+            } else {
+                button.classList.remove('active');
+                map.events.remove('click', onMapClick); // Remove click event listener when inactive
+            }
+        }
+
+        // Toggle delete activity and button style
+        function toggleDelete() {
+            deleteActive = !deleteActive;
+            var button = document.getElementById('deleteButton');
+            if (deleteActive) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        }
+
+        // Add a placemark on map click when marker is active
+        function onMapClick(e) {
+            if (deleteActive) return; // Do not add marker if delete is active
+            var coords = e.get('coords');
+            var inputField = document.getElementById('textInput');
+            var colorPicker = document.getElementById('colorPicker');
+
+            var inputText = inputField.value.trim();
+            var placemarkColor = colorPicker.value; // Get selected color
+
+            var placemark = new ymaps.Placemark(
+                coords,
+                { hintContent: inputText || 'Mark' },
+                {
+                    draggable: true,
+                    iconColor: placemarkColor // Set the color of the placemark
+                }
+            );
+
+            map.geoObjects.add(placemark);
+            placemarks.push(placemark); // Store the placemark
+
+            inputField.value = ''; // Clear input field after placing
+			//colorPicker.value = '#ff0000'; // Reset color picker to default after placing
+
+            placemark.events.add('click', function () {
+                if (deleteActive) {
+                    map.geoObjects.remove(placemark);
+                    placemarks = placemarks.filter((p) => p !== placemark); // Remove from placemarks array
+                }
+            });
+        }
+
+        // Function to search placemarks by text
+        function searchPlacemarks() {
+            var searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            placemarks.forEach((placemark) => {
+                var hintContent = placemark.properties.get('hintContent').toLowerCase();
+                if (hintContent.includes(searchQuery)) {
+                    var coords = placemark.geometry.getCoordinates();
+                    map.setCenter(coords, 14); // Center on the matching placemark
+                }
+            });
+        }
+    </script>
+</body>
+</html>
