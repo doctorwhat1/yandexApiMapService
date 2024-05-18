@@ -53,29 +53,47 @@
     <input type="color" id="colorPicker" value="#ff0000" title="Choose your color">
     <input type="text" id="searchInput" placeholder="Search for a placemark">
     <button onclick="searchPlacemarks()">Search</button>
+    <button onclick="sendData()">Send Data</button>
     <div id="map" style="width: 600px; height: 400px;"></div>
 
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+      //import { initializeApp } from 'firebase/app'
+      import { getFirestore, collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+    
+      //import { getFirestore } from 'firebase/firestore'
       // TODO: Add SDKs for Firebase products that you want to use
       // https://firebase.google.com/docs/web/setup#available-libraries
     
       // Your web app's Firebase configuration
       const firebaseConfig = {
-        apiKey: "AIzaSyAFC_ADHEiKZblASNPFCVqhiU9yg8eEcqo",
-        authDomain: "geolocdatabase.firebaseapp.com",
-        projectId: "geolocdatabase",
-        storageBucket: "geolocdatabase.appspot.com",
-        messagingSenderId: "730193799094",
-        appId: "1:730193799094:web:821e97c14a4644b5e24317"
-      };
+        apiKey: "AIzaSyAwQYWat91ZdoE7SSZrVwnbNR70xiUov-Q",
+        authDomain: "geolocation-7a2f6.firebaseapp.com",
+        databaseURL: "https://geolocation-7a2f6-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "geolocation-7a2f6",
+        storageBucket: "geolocation-7a2f6.appspot.com",
+        messagingSenderId: "832765482300",
+        appId: "1:832765482300:web:4398b3133e4a32c573fa39"
+};
     
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);
+
+      const db = getFirestore(app)
+
+      window.db = db
+      
+
     </script>
 
+      
+
+       
+
     <script>
+
+        
         var map; // Global map variable
         var markerActive = false;
         var deleteActive = false;
@@ -89,6 +107,7 @@
                 center: [56.296505, 43.936058],
                 zoom: 10 // Default zoom level
             });
+            receiveData()
         }
 
         // Toggle marker activity and button style
@@ -107,47 +126,49 @@
 
         // Toggle delete activity and button style
         function toggleDelete() {
+            
             deleteActive = !deleteActive;
             var button = document.getElementById('deleteButton');
             if (deleteActive) {
                 button.classList.add('active');
+                console.log('lol!')
             } else {
                 button.classList.remove('active');
+                console.log('lol2')
             }
         }
 
         // Add a placemark on map click when marker is active
-        function onMapClick(e) {
-            if (deleteActive) return; // Do not add marker if delete is active
-            var coords = e.get('coords');
-            var inputField = document.getElementById('textInput');
-            var colorPicker = document.getElementById('colorPicker');
+        async function onMapClick(e) {
+        if (deleteActive) return;
+        var coords = e.get('coords');
+        var inputField = document.getElementById('textInput');
+        var colorPicker = document.getElementById('colorPicker');
+        var inputText = inputField.value.trim();
+        var placemarkColor = colorPicker.value;
 
-            var inputText = inputField.value.trim();
-            var placemarkColor = colorPicker.value; // Get selected color
+        var placemark = new ymaps.Placemark(
+          coords,
+          { hintContent: inputText || 'Mark' },
+          { draggable: false, iconColor: placemarkColor }
+        );
 
-            var placemark = new ymaps.Placemark(
-                coords,
-                { hintContent: inputText || 'Mark' },
-                {
-                    draggable: true,
-                    iconColor: placemarkColor // Set the color of the placemark
-                }
-            );
+        map.geoObjects.add(placemark);
+        placemarks.push({ placemark, id: await sendData({ coords, hintContent: inputText, color: placemarkColor }) });
 
-            map.geoObjects.add(placemark);
-            placemarks.push(placemark); // Store the placemark
+        inputField.value = '';
+        colorPicker.value = '#ff0000';
 
-            inputField.value = ''; // Clear input field after placing
-			//colorPicker.value = '#ff0000'; // Reset color picker to default after placing
-
-            placemark.events.add('click', function () {
-                if (deleteActive) {
-                    map.geoObjects.remove(placemark);
-                    placemarks = placemarks.filter((p) => p !== placemark); // Remove from placemarks array
-                }
-            });
-        }
+        placemark.events.add('click', async function () {
+          if (deleteActive) {
+            map.geoObjects.remove(placemark);
+            console.log('deleting')
+            placemarks = placemarks.filter((p) => p.placemark !== placemark);
+            console.log(placemark)
+            await deleteData(placemark);
+          }
+        });
+      }
 
         // Function to search placemarks by text
         function searchPlacemarks() {
@@ -160,6 +181,81 @@
                 }
             });
         }
+
+    const sendButton = document.getElementById('sendBTN')
+
+    async function receiveData() {
+        const db = window.db;
+        const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js');
+        const placemarksCollection = collection(db, 'placemarks');
+        const querySnapshot = await getDocs(placemarksCollection);
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          var placemark = new ymaps.Placemark(
+            [data.latitude, data.longitude],
+            { hintContent: data.text },
+            { draggable: false, iconColor: data.color }
+          );
+
+          map.geoObjects.add(placemark);
+          placemarks.push(placemark);
+
+           placemark.events.add('click', function () {
+            if (deleteActive) {
+              map.geoObjects.remove(placemark);
+              placemarks = placemarks.filter((p) => p !== placemark);
+              deleteData(placemark);
+            }
+          });
+        });
+      }
+
+      async function sendData(placemarkData) {
+        const db = window.db;
+        const { collection, doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js');
+        const placemarksCollection = collection(db, 'placemarks');
+        const newDoc = doc(placemarksCollection);
+
+        await setDoc(newDoc, {
+          latitude: placemarkData.coords[0],
+          longitude: placemarkData.coords[1],
+          text: placemarkData.hintContent,
+          color: placemarkData.color
+        }).then(() => {
+          console.log("Document successfully written!");
+        }).catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+      }
+
+      async function deleteData(placemark) {
+        const db = window.db;
+        const { collection, getDocs, query, where, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js');
+        const placemarksCollection = collection(db, 'placemarks');
+        const q = query(placemarksCollection, where("latitude", "==", placemark.geometry.getCoordinates()[0]), where("longitude", "==", placemark.geometry.getCoordinates()[1]));
+        const querySnapshot = await getDocs(q);
+
+        querySnapshot.forEach(async (doc) => {
+          await deleteDoc(doc.ref).then(() => {
+            console.log("Document successfully deleted!");
+          }).catch((error) => {
+            console.error("Error deleting document: ", error);
+          });
+        });
+      }
+
+            // db.collection('names-test').doc().set({
+            //     name: nameField.value,
+            //     surname: surnameField.value
+            // })
+        
+            
+    
+
     </script>
+
+<br><br><br><br><br><br><br><br><br><br>
+
 </body>
 </html>
