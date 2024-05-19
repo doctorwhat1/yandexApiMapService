@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Login & Registration Form</title>
+  <!---Custom CSS File--->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <input type="checkbox" id="check">
+    <div class="login form">
+      <header>Login</header>
+      <form action="#">
+        <input type="text" id="login-email" placeholder="Enter your email">
+        <input type="password" id="login-password" placeholder="Enter your password">
+        <a href="#">Forgot password?</a>
+        <input type="button" class="button" id="login-btn" value="Login">
+      </form>
+      <div class="signup">
+        <span class="signup">Don't have an account?
+         <label for="check">Signup</label>
+        </span>
+      </div>
+    </div>
+    <div class="registration form">
+      <header>Signup</header>
+      <form action="#">
+        <input type="text" id="signup-email" placeholder="Enter your email">
+        <input type="password" id="signup-password" placeholder="Create a password">
+        <input type="password" id="signup-confirm-password" placeholder="Confirm your password">
+        <input type="button" class="button" id="signup-btn" value="Signup">
+      </form>
+      <div class="signup">
+        <span class="signup">Already have an account?
+         <label for="check">Login</label>
+        </span>
+      </div>
+    </div>
+  </div>
+  
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAwQYWat91ZdoE7SSZrVwnbNR70xiUov-Q",
+      authDomain: "geolocation-7a2f6.firebaseapp.com",
+      databaseURL: "https://geolocation-7a2f6-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "geolocation-7a2f6",
+      storageBucket: "geolocation-7a2f6.appspot.com",
+      messagingSenderId: "832765482300",
+      appId: "1:832765482300:web:4398b3133e4a32c573fa39"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById('signup-btn').addEventListener('click', () => {
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+      if (password === confirmPassword) {
+        createUserWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            const user = userCredential.user;
+            console.log('Signup successful:', user);
+            alert('Signup successful!');
+            localStorage.setItem('user', JSON.stringify(user));
+          })
+          .catch((error) => {
+            console.error('Error during signup:', error);
+            alert('Error during signup: ' + error.message);
+          });
+      } else {
+        alert('Passwords do not match');
+      }
+    });
+
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log('Login successful:', user);
+          alert('Login successful!');
+          localStorage.setItem('user', JSON.stringify(user));
+		  location.replace("https:///geolocdatabase.web.app/")
+        })
+        .catch((error) => {
+          console.error('Error during login:', error);
+          alert('Error during login: ' + error.message);
+        });
+    });
+  </script>
+</body>
+</html>

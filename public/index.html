@@ -24,6 +24,8 @@
     -->
     <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
+    <link rel="stylesheet" href="style2.css">
+
     <style>
       .active {
           background-color: blue;
@@ -47,14 +49,21 @@
     </style>
   </head>
   <body>
-    <button id="markerButton" onclick="toggleMarker()">Add Marker</button>
-    <button id="deleteButton" onclick="toggleDelete()">Delete</button>
-    <input type="text" id="textInput" placeholder="Enter text for marker">
-    <input type="color" id="colorPicker" value="#ff0000" title="Choose your color">
-    <input type="text" id="searchInput" placeholder="Search for a placemark">
-    <button onclick="searchPlacemarks()">Search</button>
-    <button onclick="sendData()">Send Data</button>
-    <div id="map" style="width: 600px; height: 400px;"></div>
+    <div class="container">
+      <div class="header">
+          <button id="homeButton">Home</button>
+          <button id="profileButton" onclick="window.location.href='./profile.html'">Profile</button>
+      </div>
+      <div class="controls">
+          <button id="markerButton" onclick="toggleMarker()">Add Marker</button>
+          <button id="deleteButton" onclick="toggleDelete()">Delete</button>
+          <input type="text" id="textInput" placeholder="Enter text for marker">
+          <input type="color" id="colorPicker" value="#ff0000" title="Choose your color">
+          <input type="text" id="searchInput" placeholder="Search for a placemark">
+          <button onclick="searchPlacemarks()">Search</button>
+      </div>
+      <div id="map"></div>
+  </div>
 
     <script type="module">
       // Import the functions you need from the SDKs you need
@@ -98,6 +107,11 @@
         var markerActive = false;
         var deleteActive = false;
         var placemarks = []; // To store placemarks
+		
+		if (localStorage.getItem("user") === null) {
+		//	localStorage.setItem('user', JSON.stringify("anonym"));
+      localStorage.setItem('user', "anonym");
+		}
 
         // Initialize the map
         ymaps.ready(init);
@@ -126,7 +140,13 @@
 
         // Toggle delete activity and button style
         function toggleDelete() {
-            
+            if (localStorage.getItem("user") == "anonym")
+            {
+              alert("You're not logged in!");
+              return;
+            }  
+
+
             deleteActive = !deleteActive;
             var button = document.getElementById('deleteButton');
             if (deleteActive) {
@@ -157,7 +177,7 @@
         placemarks.push({ placemark, id: await sendData({ coords, hintContent: inputText, color: placemarkColor }) });
 
         inputField.value = '';
-        colorPicker.value = '#ff0000';
+        //colorPicker.value = '#ff0000';
 
         placemark.events.add('click', async function () {
           if (deleteActive) {
