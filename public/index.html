@@ -52,6 +52,7 @@
     <div class="container">
       <div class="header">
           <button id="homeButton">Home</button>
+          <img src="logo2.png" height="64px" alt="logo"></img>
           <button id="profileButton" onclick="window.location.href='./profile.html'">Profile</button>
       </div>
       <div class="controls">
@@ -88,17 +89,10 @@
     
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);
-
       const db = getFirestore(app)
-
       window.db = db
-      
-
     </script>
 
-      
-
-       
 
     <script>
 
@@ -130,6 +124,10 @@
             var button = document.getElementById('markerButton');
             if (markerActive) {
                 button.classList.add('active');
+                // Deactivate delete mode if active
+                if (deleteActive) {
+                    toggleDelete();
+                }
                 // Add click event listener for markers when active
                 map.events.add('click', onMapClick);
             } else {
@@ -140,96 +138,110 @@
 
         // Toggle delete activity and button style
         function toggleDelete() {
-            if (localStorage.getItem("user") == "anonym")
+            console.log(localStorage.getItem('user'))
+            if (localStorage.getItem('user') == 'anonym')
             {
               alert("You're not logged in!");
               return;
             }  
 
-
             deleteActive = !deleteActive;
             var button = document.getElementById('deleteButton');
             if (deleteActive) {
                 button.classList.add('active');
-                console.log('lol!')
+                // Deactivate marker mode if active
+                if (markerActive) {
+                    toggleMarker();
+                }
+                console.log('Delete mode active');
             } else {
                 button.classList.remove('active');
-                console.log('lol2')
+                console.log('Delete mode inactive');
             }
         }
 
         // Add a placemark on map click when marker is active
         async function onMapClick(e) {
-        if (deleteActive) return;
-        var coords = e.get('coords');
-        var inputField = document.getElementById('textInput');
-        var colorPicker = document.getElementById('colorPicker');
-        var inputText = inputField.value.trim();
-        var placemarkColor = colorPicker.value;
+            if (deleteActive) return;
+            var coords = e.get('coords');
+            var inputField = document.getElementById('textInput');
+            var colorPicker = document.getElementById('colorPicker');
+            var inputText = inputField.value.trim();
+            var placemarkColor = colorPicker.value;
+            var placemarkAuthor = localStorage.getItem("user");
 
-        var placemark = new ymaps.Placemark(
-          coords,
-          { hintContent: inputText || 'Mark' },
-          { draggable: false, iconColor: placemarkColor }
-        );
+            var placemark = new ymaps.Placemark(
+                coords,
+                { hintContent: inputText || 'Mark' },
+                { draggable: false, iconColor: placemarkColor }
+            );
 
-        map.geoObjects.add(placemark);
-        placemarks.push({ placemark, id: await sendData({ coords, hintContent: inputText, color: placemarkColor }) });
+            map.geoObjects.add(placemark);
+            placemarks.push({ placemark: placemark, id: await sendData({ coords, hintContent: inputText, color: placemarkColor, author: placemarkAuthor }) });
 
-        inputField.value = '';
-        //colorPicker.value = '#ff0000';
+            inputField.value = '';
 
-        placemark.events.add('click', async function () {
-          if (deleteActive) {
-            map.geoObjects.remove(placemark);
-            console.log('deleting')
-            placemarks = placemarks.filter((p) => p.placemark !== placemark);
-            console.log(placemark)
-            await deleteData(placemark);
-          }
-        });
-      }
-
-        // Function to search placemarks by text
-        function searchPlacemarks() {
-            var searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-            placemarks.forEach((placemark) => {
-                var hintContent = placemark.properties.get('hintContent').toLowerCase();
-                if (hintContent.includes(searchQuery)) {
-                    var coords = placemark.geometry.getCoordinates();
-                    map.setCenter(coords, 14); // Center on the matching placemark
+            placemark.events.add('click', async function () {
+                if (deleteActive) {
+                    if (localStorage.getItem('user') !== placemarkAuthor && localStorage.getItem('user') !== "admin@admin.com") {
+                        alert("You can't delete a placemark that doesn't belong to you!");
+                    } else {
+                        map.geoObjects.remove(placemark);
+                        placemarks = placemarks.filter((p) => p.placemark !== placemark);
+                        await deleteData(placemark);
+                    }
                 }
             });
         }
 
+        // Function to search placemarks by text
+        function searchPlacemarks() {
+            var searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            placemarks.forEach(({ placemark }) => { // Destructure to get the placemark object
+                if (placemark) {
+                    var hintContent = placemark.properties.get('hintContent').toLowerCase();
+                    if (hintContent.includes(searchQuery)) {
+                        var coords = placemark.geometry.getCoordinates();
+                        map.setCenter(coords, 14); // Center on the matching placemark
+                    }
+                }
+            });
+        }
+
+        
+
     const sendButton = document.getElementById('sendBTN')
 
     async function receiveData() {
-        const db = window.db;
-        const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js');
-        const placemarksCollection = collection(db, 'placemarks');
-        const querySnapshot = await getDocs(placemarksCollection);
+    const db = window.db;
+    const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js');
+    const placemarksCollection = collection(db, 'placemarks');
+    const querySnapshot = await getDocs(placemarksCollection);
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          var placemark = new ymaps.Placemark(
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        var placemark = new ymaps.Placemark(
             [data.latitude, data.longitude],
             { hintContent: data.text },
             { draggable: false, iconColor: data.color }
-          );
+        );
 
-          map.geoObjects.add(placemark);
-          placemarks.push(placemark);
+        map.geoObjects.add(placemark);
+        placemarks.push({ placemark: placemark });
 
-           placemark.events.add('click', function () {
+        placemark.events.add('click', function () {
             if (deleteActive) {
-              map.geoObjects.remove(placemark);
-              placemarks = placemarks.filter((p) => p !== placemark);
-              deleteData(placemark);
+                if (localStorage.getItem('user') !== data.author && localStorage.getItem('user') !== "admin@admin") {
+                    alert("You can't delete a placemark that doesn't belong to you!");
+                } else {
+                    map.geoObjects.remove(placemark);
+                    placemarks = placemarks.filter((p) => p.placemark !== placemark);
+                    deleteData(placemark);
+                }
             }
-          });
         });
-      }
+    });
+}
 
       async function sendData(placemarkData) {
         const db = window.db;
@@ -241,7 +253,8 @@
           latitude: placemarkData.coords[0],
           longitude: placemarkData.coords[1],
           text: placemarkData.hintContent,
-          color: placemarkData.color
+          color: placemarkData.color,
+          author: placemarkData.author
         }).then(() => {
           console.log("Document successfully written!");
         }).catch((error) => {
@@ -264,7 +277,6 @@
           });
         });
       }
-
             // db.collection('names-test').doc().set({
             //     name: nameField.value,
             //     surname: surnameField.value

@@ -89,10 +89,17 @@
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-          console.log('Login successful:', user);
-          alert('Login successful!');
-          localStorage.setItem('user', JSON.stringify(user));
-		  location.replace("https:///geolocdatabase.web.app/")
+          const usermail = user.email;
+          console.log('Login successful:', usermail);
+          //alert('Login successful!');
+
+          ////full user info
+          //localStorage.setItem('user', JSON.stringify(user)); 
+          localStorage.setItem('user', usermail);
+          
+
+          window.location.href='./index.html'
+		  //location.replace("https:///geolocdatabase.web.app/")
         })
         .catch((error) => {
           console.error('Error during login:', error);
