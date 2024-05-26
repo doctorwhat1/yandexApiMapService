@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+    }
+    .profile-container {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        text-align: center;
+        width: 300px;
+    }
+    .header {
+        background-color: #f7f7f7;
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .header button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .header button:hover {
+        background-color: #ddd;
+    }
+    .avatar-container {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        background-color: #f7f7f7;
+    }
+    .avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        margin-bottom: 0px;
+        border: 2px solid #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .info-container {
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        background-color: #f7f7f7;
+    }
+    .username {
+        font-size: 24px;
+        margin-bottom: 10px;
+		margin-top: 10px;
+        font-weight: bold;
+        color: #333;
+    }
+    .info {
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #666;
+    }
+    .divider {
+        height: 1px;
+        background-color: #ccc;
+        margin: 20px 0;
+    }
+    .logout-btn {
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .logout-btn:hover {
+        background-color: #0056b3;
+    }
+    .modify-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .modify-btn:hover {
+        background-color: #3e8e41;
+    }
+    .form-container {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 300px;
+    }
+    .form-container.show {
+        display: block;
+    }
+    .form-input {
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+    }
+    .form-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .form-btn:hover {
+        background-color: #3e8e41;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="header">
+        <button class="modify-btn" onclick="showForm()">Modify</button>
+        <button class="logout-btn" onclick="logOut()">Logout</button>
+    </div>
+    <div class="avatar-container">
+        <img src="avatar.png" alt="Avatar" class="avatar">
+		<p class="username" id="email">User Email</p>
+    </div>
+    <div class="divider"></div>
+    <div class="info-container">
+        <p class="info" id="username">User Name</p>
+        <p class="info" id="firstName">First Name</p>
+        <p class="info" id="lastName">Last Name</p>
+        <p class="info" id="dob">Date of Birth</p>
+    </div>
+    <div class="divider"></div>
+    <div class="form-container">
+        <form>
+            <input type="text" id="usernameInput" class="form-input" placeholder="Username">
+            <input type="text" id="firstNameInput" class="form-input" placeholder="First Name">
+            <input type="text" id="lastNameInput" class="form-input" placeholder="Last Name">
+            <input type="date" id="dobInput" class="form-input" placeholder="Date of Birth">
+            <button class="form-btn" onclick="saveForm()">Save</button>
+			<button class="form-btn" onclick="hideForm()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+    <script>
+        let userData = JSON.parse(localStorage.getItem('userData'));
+        if (!userData) {
+            userData = {
+                username: 'User Name',
+                firstName: 'First Name',
+                lastName: 'Last Name',
+                dob: '1990-01-01'
+            };
+            localStorage.setItem('userData', JSON.stringify(userData));
+        }
+
+		document.getElementById('email').innerText = localStorage.getItem("user");
+        document.getElementById('username').innerText = userData.username;
+        document.getElementById('firstName').innerText = userData.firstName;
+        document.getElementById('lastName').innerText = userData.lastName;
+        document.getElementById('dob').innerText = userData.dob;
+
+        function showForm() {
+            document.querySelector('.form-container').classList.add('show');
+			console.log('lol2');
+        }
+
+        function hideForm() {
+            document.querySelector('.form-container').classList.remove('show');
+        }
+		
+		function logOut() {
+            localStorage.setItem('user', 'anonym');
+            window.location.href='./authentication.html'
+        }
+
+        function saveForm() {
+			console.log('lol');
+            userData.username = document.getElementById('usernameInput').value;
+            userData.firstName = document.getElementById('firstNameInput').value;
+            userData.lastName = document.getElementById('lastNameInput').value;
+            userData.dob = document.getElementById('dobInput').value;
+            localStorage.setItem('userData', JSON.stringify(userData));
+            document.getElementById('username').innerText = userData.username;
+            document.getElementById('firstName').innerText = userData.firstName;
+            document.getElementById('lastName').innerText = userData.lastName;
+            document.getElementById('dob').innerText = userData.dob;
+            hideForm();
+			
+			console.log(userData);
+            // Add code to send data to Firestore database
+			
+			// Get a reference to the Firestore database
+		//	var db = firebase.firestore();
+			
+          //  db.collection('users').doc('userID').set(userData)
+           //     .then(() => {
+           //         console.log('User data updated in Firestore');
+           //     })
+            //    .catch((error) => {
+            //        console.error('Error updating user data: ', error);
+           //     });
+        }
+    </script>
+</body>
+</html>

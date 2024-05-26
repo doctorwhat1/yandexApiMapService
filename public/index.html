@@ -53,7 +53,7 @@
       <div class="header">
           <button id="homeButton">Home</button>
           <img src="logo2.png" height="64px" alt="logo"></img>
-          <button id="profileButton" onclick="window.location.href='./profile.html'">Profile</button>
+          <button id="profileButton" onclick="profileClick()">Profile</button>
       </div>
       <div class="controls">
           <button id="markerButton" onclick="toggleMarker()">Add Marker</button>
@@ -208,6 +208,15 @@
             });
         }
 
+        function profileClick() {
+          if (localStorage.getItem("user") == "anonym"){
+            window.location.href='./profile.html';
+          } else {
+            window.location.href='./profile2.html';
+          }
+
+        }
+
         
 
     const sendButton = document.getElementById('sendBTN')
@@ -222,7 +231,7 @@
         const data = doc.data();
         var placemark = new ymaps.Placemark(
             [data.latitude, data.longitude],
-            { hintContent: data.text },
+            { hintContent: data.text +" (" + data.author + ")"},
             { draggable: false, iconColor: data.color }
         );
 
@@ -231,7 +240,7 @@
 
         placemark.events.add('click', function () {
             if (deleteActive) {
-                if (localStorage.getItem('user') !== data.author && localStorage.getItem('user') !== "admin@admin") {
+                if (localStorage.getItem('user') !== data.author && localStorage.getItem('user') !== "admin@admin.com") {
                     alert("You can't delete a placemark that doesn't belong to you!");
                 } else {
                     map.geoObjects.remove(placemark);
