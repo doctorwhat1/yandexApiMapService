@@ -1,1 +1,1 @@
-# pythonScheduleBot
+# Yandex API Placemark Service
