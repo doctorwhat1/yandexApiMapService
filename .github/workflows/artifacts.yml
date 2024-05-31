@@ -1,0 +1,28 @@
+name: Artifacts
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Run tests
+        run: |
+          npm test
+
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: .
