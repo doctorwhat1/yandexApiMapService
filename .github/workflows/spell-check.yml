@@ -16,4 +16,4 @@ jobs:
         run: npm install
 
       - name: Run spell checker
-        run: npm run spell-check
+        run: node public/spell-checker.js
