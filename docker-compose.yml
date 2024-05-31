@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "80:80"
+    depends_on:
+      - firebase
+    environment:
+      - FIREBASE_PROJECT_ID="geolocation-7a2f6"
+      - FIREBASE_API_KEY="AIzaSyAwQYWat91ZdoE7SSZrVwnbNR70xiUov-Q"
+
+  firebase:
+    image: firebase/firebase-tools:latest
+    command: emulators:start --only firestore
+    ports:
+      - "8080:8080"
+    environment:
+      - FIREBASE_PROJECT_ID="geolocation-7a2f6"
+      - FIREBASE_API_KEY="AIzaSyAwQYWat91ZdoE7SSZrVwnbNR70xiUov-Q"
