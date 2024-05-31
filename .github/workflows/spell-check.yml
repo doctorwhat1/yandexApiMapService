@@ -1,5 +1,4 @@
-yaml
-name: Spell Checker
+name: Spell-Checker
 
 on:
   push:
