@@ -1,4 +1,3 @@
-javascript
 const typos = require('typos');
 const fs = require('fs');
 const path = require('path');
