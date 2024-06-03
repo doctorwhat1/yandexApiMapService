@@ -4,5 +4,9 @@
   "scripts": {
     "start": "http-server -p 80",
     "test": "echo 'No tests to run.'"
+  },
+  "devDependencies": {
+    "playwright": "^1.29.2",
+    "@playwright/test": "^1.29.2",
   }
 }
