@@ -1,4 +1,4 @@
-name: Button Click Test
+name: Website Click Test
 
 on: [push, pull_request]
 
